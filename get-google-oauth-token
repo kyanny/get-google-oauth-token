@@ -1,0 +1,63 @@
+#!/usr/bin/env ruby
+#
+# Inspired by:
+# https://github.com/jugyo/get-twitter-oauth-token
+#
+# See also:
+# http://kinsentansa.blogspot.jp/2012/07/google-drivecurl.html
+#
+require 'uri'
+require 'json'
+
+puts <<HELP
+1. Open https://console.developers.google.com/project
+
+2. Create/Select project
+
+3. Visit APIs & auth -> APIs
+
+4. Grant access to your favorite APIs
+
+5. Visit APIs & auth -> Credentials
+
+6. Oauth -> Create new Client ID
+
+7. Choose Installed application (Other)
+
+8. Note CLIENT ID, CLIENT_SECRET and REDIRECT URIS
+
+OK? [y/N]
+HELP
+
+until gets.match(/^y(es)?/i)
+end
+
+print "Client ID: "
+client_id = gets.strip
+
+print "Client Secret: "
+client_secret = gets.strip
+
+print "Redirect URI: "
+redirect_uri = gets.strip
+
+print <<SCOPE
+Scope: (e.g. https://www.googleapis.com/auth/drive.file)
+(Send ^D to terminate)
+SCOPE
+scopes = $stdin.readlines.map(&:chomp)
+
+url = "https://accounts.google.com/o/oauth2/auth?client_id=%s&response_type=code&redirect_uri=%s&scope=%s" % [client_id, redirect_uri, scopes.join("+")]
+puts url
+system "open '#{url}'"
+
+print "Code: "
+code = gets.strip
+
+curl = <<CURL
+curl -s -X POST https://accounts.google.com/o/oauth2/token -d "code=#{code}" -d "client_id=#{client_id}" -d "client_secret=#{client_secret}" -d "redirect_uri=#{redirect_uri}" -d "grant_type=authorization_code"
+CURL
+puts curl
+json = `#{curl}`
+
+puts json
